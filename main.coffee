@@ -15,6 +15,7 @@ canvas = null
 timeouts = []
 defer = (fn) ->
 	timeouts.push(window.setTimeout(fn, 0))
+	return
 
 toHslString = (h) ->
 	# Firefox doesn't like a semicolon here. Go figure!
@@ -96,6 +97,33 @@ bsort = ->
 			swapped = true
 
 	defer(bsort) if swapped
+
+ssort = (gap) ->
+	if(not gap?)
+		gap = 1
+		gap = gap*3 + 1 while gap < colours.length
+
+	gap = Math.floor(gap/3)
+	defer(-> _issort(gap, 0, 1))
+
+	return
+	
+_issort = (gap, offset, index) ->
+	for j in [index...0]
+		if colours[(j - 1)*gap+offset].val > colours[j*gap+offset].val
+			swapRects((j - 1)*gap+offset , j*gap+offset)
+
+	index++
+	
+	if index*gap+offset < colours.length
+		_issort(gap,offset,index)
+	else
+		if offset < Math.min(colours.length-gap-1,gap)
+			defer(-> _issort(gap,offset+1,1))
+		else
+			defer(-> ssort(gap, 0)) if gap > 1
+
+	return
 
 qsort = (tukey) ->
 	# Put the median of colours.val's in colours[a].
@@ -180,6 +208,7 @@ $(document).ready(->
 				when 'isort'  then isort
 				when 'qsort1' then -> qsort(false)
 				when 'qsort2' then -> qsort(true)
+				when 'ssort'  then ssort
 
 		reset()
 	)
